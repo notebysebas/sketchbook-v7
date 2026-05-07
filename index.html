@@ -260,6 +260,13 @@ body.ui-hidden.fps-active #pb-fps-move-card{
   background:var(--pan);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);min-width:130px}
 body.fps-active #fps-plane-ctrl{display:flex}
+/* FPS rside: swap look joystick + plane ctrl to left when sidecol is on right */
+body.rside.fps-active #fps-joy-look{right:auto;left:24px}
+body.rside.fps-active #fps-plane-ctrl{right:auto;left:8px}
+body.rside.narrow-mode.fps-active #fps-joy-look{right:auto;left:24px}
+/* FPS rside: move joystick in ui-hidden goes to right */
+body.rside.ui-hidden.fps-active #fps-move-card{left:auto;right:24px}
+body.rside.ui-hidden.fps-active #pb-fps-move-card{left:auto;right:24px}
 body.fps-active #sc-fab{display:none!important}
 #fps-plane-toggle{height:28px;padding:0 8px;border-radius:6px;border:1px solid var(--bdr);
   background:transparent;color:var(--ink);font-family:'DM Mono',monospace;font-size:7px;
@@ -828,6 +835,7 @@ body.ui-hidden #sc-fab{top:auto;right:auto;left:10px;bottom:94px}
   <button class="btn btn-sm" id="blook" title="Look around · 1F orbit · 2F pan/zoom">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5V2.5a1 1 0 0 1 2 0V5"/><path d="M9 5V3.5a1 1 0 0 1 2 0V7"/><path d="M5 5V2a1 1 0 0 1 2 0v3"/><path d="M5 5V4a1 1 0 0 0-2 0v4a4 4 0 0 0 4 4h1a4 4 0 0 0 4-4V5"/></svg>
   </button>
+  <button class="btn btn-pill" id="bstylus" title="Stylus-only draw: finger=navigate, pen=draw" style="font-size:6.5px;width:auto;padding:0 6px;letter-spacing:.04em">FINGER</button>
   <div class="tsep"></div>
   <!-- File menu: save, load, export, png, record, scale -->
   <button class="btn btn-sm" id="bfile" title="File · save, load, export">
@@ -870,7 +878,6 @@ body.ui-hidden #sc-fab{top:auto;right:auto;left:10px;bottom:94px}
   <button id="bpan"></button>
   <button id="borbit"></button>
   <button id="bbg"></button>
-  <button id="bstylus"></button>
   <button id="bsave"></button>
   <button id="bload"></button>
   <button id="bexp"></button>
@@ -1466,7 +1473,7 @@ scene.background=new THREE.Color(0xcdb899);
 scene.fog=new THREE.FogExp2(0xcdb899,.012);
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.01,2000);
 let orthoZoom=8;
-const ortho=new THREE.OrthographicCamera(-orthoZoom,orthoZoom,orthoZoom,-orthoZoom,.01,2000);
+const ortho=new THREE.OrthographicCamera(-orthoZoom,orthoZoom,orthoZoom,-orthoZoom,-2000,4000);
 let useOrtho=false;
 function activeCam(){return useOrtho?ortho:camera;}
 const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
@@ -7312,6 +7319,7 @@ document.getElementById('pb-axis').addEventListener('click',function(){document.
 // Narrow-bar delegates — input modes
 document.getElementById('pb-gestswap').addEventListener('click',function(){document.getElementById('bgestswap').click();});
 document.getElementById('pb-stylus').addEventListener('click',function(){stylusOnly=!stylusOnly;updateStylusLabel();toast(stylusOnly?'Stylus mode: pen draws, finger navigates':'Stylus mode off');});
+document.getElementById('bstylus').addEventListener('click',function(){stylusOnly=!stylusOnly;updateStylusLabel();toast(stylusOnly?'Stylus mode: pen draws, finger navigates':'Stylus mode off');});
 // Narrow-bar delegates — actions
 document.getElementById('pb-clear').addEventListener('click',function(){document.getElementById('bclear').click();});
 document.getElementById('pb-bg').addEventListener('click',function(e){
