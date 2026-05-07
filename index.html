@@ -439,6 +439,27 @@ body.rside #expmenu{right:auto;left:44px;transform-origin:top left}
 .emb:hover,.emb.hover{background:rgba(26,26,46,.07)}
 .emsep{height:1px;background:var(--bdr);margin:2px 0}
 
+/* ── VIEW POPOVER (long-press on view toggle) ── */
+#view-pop{position:fixed;z-index:400;background:var(--pan);border:1px solid var(--bdr);
+  border-radius:9px;box-shadow:0 4px 16px rgba(0,0,0,.1);padding:5px 4px;
+  display:none;flex-direction:column;gap:2px;min-width:140px;backdrop-filter:blur(12px)}
+#view-pop.open{display:flex}
+.vp-row{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;
+  cursor:pointer;transition:background .08s;border:none;background:transparent;
+  color:var(--ink);font-family:'DM Mono',monospace;font-size:8.5px;text-align:left;width:100%}
+.vp-row:hover,.vp-row.hover{background:rgba(26,26,46,.07)}
+.vp-row.on{background:rgba(26,26,46,.1)}
+.vp-dot{width:6px;height:6px;border-radius:50%;background:var(--mut);flex-shrink:0;transition:background .1s}
+.vp-row.on .vp-dot{background:var(--ink)}
+.vp-sep{height:1px;background:var(--bdr);margin:2px 0}
+/* BG swatch row inside view-pop */
+#vp-bg-row{display:flex;align-items:center;gap:5px;padding:4px 8px}
+#vp-bg-row .bgpop-swatch{width:18px;height:18px;border-radius:4px}
+#vp-bg-row #vp-bgpick{width:18px;height:18px;border-radius:4px;border:1px solid var(--bdr);
+  overflow:hidden;position:relative;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);flex-shrink:0;cursor:pointer}
+#vp-bg-row #vp-bgpick.on{outline:2px solid var(--ink);outline-offset:1px}
+#vp-bg-row #vp-bgpick input{opacity:0;position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
+
 /* ── STROKE SELECTION GIZMO (floating, appears on select) ── */
 #sgizmo{position:fixed;z-index:250;display:none;flex-direction:column;gap:4px;padding:0;
   min-width:168px;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -758,35 +779,26 @@ body.ui-hidden #sc-fab{top:auto;right:auto;left:10px;bottom:94px}
   <button id="gview-dist-close" class="btn btn-sm" style="width:22px;height:22px;border-radius:50%;font-size:11px;line-height:1;flex-shrink:0">✕</button>
 </div>
 
-<!-- TOPBAR: view/scene controls only — drawing tools live in sidebar/narrow bar -->
+<!-- TOPBAR: consolidated — New, Pages, Views, View toggle, Layers, Undo/Redo/Clear, Look, File -->
 <div id="topbar" class="card">
-  <!-- Navigation -->
-  <button class="btn btn-sm mode" id="bpan" data-k="G" title="Pan (G)">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2v2M7 10v2M2 7h2M10 7h2"/><circle cx="7" cy="7" r="2.5"/><path d="M5 2.5L7 1L9 2.5M5 11.5L7 13L9 11.5M2.5 9L1 7L2.5 5M11.5 9L13 7L11.5 5"/></svg>
-  </button>
-  <button class="btn btn-sm mode" id="borbit" data-k="R" title="Orbit (R)">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7Q2 3 7 3Q12 3 12 7"/><path d="M12 7Q12 11 7 11Q2 11 2 7"/><path d="M9.5 1.5L12 3.5L9.5 5.5"/><path d="M4.5 12.5L2 10.5L4.5 8.5"/></svg>
+  <!-- New File (top-left) -->
+  <button class="btn btn-sm danger" id="bnew" title="New scene">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h5l3 3v7H3z"/><path d="M8 2v3h3"/><path d="M10.5 1.5l.6 1.2 1.2.6-1.2.6-.6 1.2-.6-1.2-1.2-.6 1.2-.6z" stroke-width="1.1"/></svg>
   </button>
   <div class="tsep"></div>
-  <!-- Scene toggles (moved from sidebar) -->
-  <button class="btn btn-sm on" id="bsurf" title="Surface (A)">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10L7 5L12 10"/><path d="M2 10L7 13L12 10L7 5Z" stroke-width="1.2"/></svg>
+  <!-- Pages + Views -->
+  <button class="btn btn-pill" id="pgbtn" title="Pages" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.05em">PAGES</button>
+  <button class="btn btn-pill" id="vwbtn" title="Saved Views" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.05em">VIEWS</button>
+  <div class="tsep"></div>
+  <!-- View toggle: tap=all on/off, arrow opens popover -->
+  <button class="btn btn-sm on" id="bview-toggle" title="View toggles · tap for all on/off">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7Q3 4 7 4Q11 4 13 7Q11 10 7 10Q3 10 1 7Z"/><circle cx="7" cy="7" r="2"/><path d="M3 2L5 4M11 2L9 4" stroke-width="1.1" opacity=".4"/></svg>
   </button>
-  <button class="btn btn-sm on" id="bgrid" title="Grid">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
+  <button class="btn btn-sm" id="bview-arrow" title="View options" style="width:18px;height:28px;padding:0;margin-left:-3px">
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 3L4 5.5L6.5 3"/></svg>
   </button>
-  <button class="btn btn-sm on" id="baxis" title="Axis lines">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke-linecap="round"><line x1="7" y1="7" x2="13" y2="7" stroke="#b03020" stroke-width="1.8"/><line x1="7" y1="7" x2="7" y2="1" stroke="#1a9940" stroke-width="1.8"/><line x1="7" y1="7" x2="3" y2="11" stroke="#1e52a0" stroke-width="1.8"/></svg>
-  </button>
-  <button class="btn btn-sm on" id="bdepth" data-k="X" title="Depth cues (X)">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5"/><path d="M7 2A5 5 0 0 1 7 12" fill="currentColor" stroke="none" opacity=".28"/><circle cx="7" cy="7" r="5"/></svg>
-  </button>
-  <button class="btn btn-pill" id="bdepth-op" title="Depth plane opacity" style="font-size:6.5px;width:auto;padding:0 6px;letter-spacing:.04em">50%</button>
-  <button class="btn btn-pill on" id="bsurfgrid" title="Surface grid" style="font-size:6.5px;width:auto;padding:0 6px;letter-spacing:.04em">DOT</button>
-  <!-- Delete loft — only visible when current surface is a loft (JS-toggled) -->
-  <button class="btn btn-sm danger" id="bdelloft" title="Delete loft surface" style="display:none">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5L5 3L9 3L11 5L11 11L3 11Z"/><line x1="4" y1="7" x2="10" y2="7"/><line x1="4" y1="9" x2="10" y2="9"/></svg>
-  </button>
+  <!-- Layers -->
+  <button class="btn btn-pill" id="blayers" title="Layers" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.05em">LAYERS</button>
   <div class="tsep"></div>
   <!-- Undo/redo/clear -->
   <button class="btn btn-sm" id="bundo" title="Undo (Ctrl+Z)">
@@ -799,40 +811,51 @@ body.ui-hidden #sc-fab{top:auto;right:auto;left:10px;bottom:94px}
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 12,4"/><path d="M5 4L5 2L9 2L9 4"/><path d="M3 4L4 13L10 13L11 4"/></svg>
   </button>
   <div class="tsep"></div>
-  <!-- Export scale -->
-  <button class="btn btn-pill" id="bscale" title="Export scale — cycles through real-world ratios" style="font-size:6.5px;width:auto;padding:0 6px;letter-spacing:.04em;opacity:0.45">OFF</button>
-  <div class="tsep"></div>
-  <!-- Layers -->
-  <button class="btn btn-pill" id="blayers" title="Layers" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.05em">LAYERS</button>
-  <div class="tsep"></div>
-  <!-- View -->
-  <button class="btn btn-pill" id="bpersp" data-k="V" title="Toggle perspective/ortho (V)" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.04em">PERSP</button>
-  <button class="btn btn-pill" id="bgestswap" title="Swap 2-finger gesture" style="font-size:6.5px;width:auto;padding:0 6px;letter-spacing:.04em">2F=ORB</button>
-  <button class="btn btn-pill" id="bstylus" title="Stylus-only draw: finger=navigate, pen=draw" style="font-size:6.5px;width:auto;padding:0 6px;letter-spacing:.04em">FINGER</button>
-  <button class="btn btn-sm" id="bbg" title="Background color">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1" width="12" height="12" rx="2"/><circle cx="7" cy="7" r="3" fill="currentColor" stroke="none" opacity=".3"/></svg>
-  </button>
-  <button class="btn btn-sm danger" id="bnew" title="New scene">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2h5l3 3v7H3z"/><path d="M8 2v3h3"/><line x1="9" y1="7" x2="12" y2="4" stroke-width="1.2" opacity="0"/><path d="M10.5 1.5l.6 1.2 1.2.6-1.2.6-.6 1.2-.6-1.2-1.2-.6 1.2-.6z" stroke-width="1.1"/></svg>
+  <!-- Look around mode: 1-finger orbit, 2-finger pan/zoom, no drawing -->
+  <button class="btn btn-sm" id="blook" title="Look around · 1F orbit · 2F pan/zoom">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5V2.5a1 1 0 0 1 2 0V5"/><path d="M9 5V3.5a1 1 0 0 1 2 0V7"/><path d="M5 5V2a1 1 0 0 1 2 0v3"/><path d="M5 5V4a1 1 0 0 0-2 0v4a4 4 0 0 0 4 4h1a4 4 0 0 0 4-4V5"/></svg>
   </button>
   <div class="tsep"></div>
-  <!-- Pages + Views -->
-  <button class="btn btn-pill" id="pgbtn" title="Pages" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.05em">PAGES</button>
-  <button class="btn btn-pill" id="vwbtn" title="Saved Views" style="font-size:7px;width:auto;padding:0 7px;letter-spacing:.05em">VIEWS</button>
-  <div class="tsep"></div>
-  <!-- File -->
-  <button class="btn btn-sm" id="bsave" title="Save">
+  <!-- File menu: save, load, export, png, record, scale -->
+  <button class="btn btn-sm" id="bfile" title="File · save, load, export">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2L10 2L12 4L12 12L2 12Z"/><rect x="4" y="2" width="6" height="4" rx=".5"/><rect x="4" y="8" width="6" height="4" rx=".5"/></svg>
   </button>
-  <button class="btn btn-sm" id="bload" title="Load">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5L2 12L12 12L12 5L7 2Z"/><line x1="7" y1="5" x2="7" y2="9"/><polyline points="4,7 7,9 10,7"/></svg>
-  </button>
-  <button class="btn btn-sm" id="bexp" title="Export 3D">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="9" x2="7" y2="2"/><polyline points="4,5 7,2 10,5"/><path d="M2 10L2 12L12 12L12 10"/></svg>
-  </button>
-  <button class="btn btn-sm" id="bpng" data-k="P" title="Save PNG (P)">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="12" height="9" rx="1.5"/><circle cx="7" cy="7.5" r="2"/><path d="M4 3L5 1L9 1L10 3"/></svg>
-  </button>
+</div>
+
+<!-- View popover — opened by long-press on #bview-toggle -->
+<div id="view-pop">
+  <button class="vp-row on" id="bsurf" title="Surface on/off"><span class="vp-dot"></span>Surface</button>
+  <button class="vp-row on" id="bgrid" title="Grid on/off"><span class="vp-dot"></span>Grid</button>
+  <button class="vp-row on" id="baxis" title="Axis lines on/off"><span class="vp-dot"></span>Axis</button>
+  <button class="vp-row on" id="bdepth" title="Depth cues on/off"><span class="vp-dot"></span>Depth</button>
+  <div class="vp-sep"></div>
+  <button class="vp-row" id="bdepth-op" title="Cycle depth opacity" style="font-size:8px">Depth: 50%</button>
+  <button class="vp-row on" id="bsurfgrid" title="Cycle surface grid" style="font-size:8px">Grid: DOT</button>
+  <button class="vp-row" id="bdelloft" title="Delete loft surface" style="display:none;color:#b03020">Delete Loft</button>
+  <div class="vp-sep"></div>
+  <button class="vp-row" id="bpersp" title="Toggle perspective/ortho">PERSP</button>
+  <button class="vp-row" id="bgestswap" title="Swap 2-finger gesture">2F=ORB</button>
+  <div class="vp-sep"></div>
+  <div id="vp-bg-row">
+    <span style="font-size:7.5px;color:var(--mut);letter-spacing:.06em;flex-shrink:0">BG</span>
+    <div class="bgpop-swatch on" id="vp-bg-beige" title="Tan" style="background:#cdb899"></div>
+    <div class="bgpop-swatch" id="vp-bg-white" title="White" style="background:#f5f0e8;border-color:var(--bdr)"></div>
+    <div class="bgpop-swatch" id="vp-bg-black" title="Black" style="background:#1a1a2e"></div>
+    <div id="vp-bgpick" title="Custom color"><input type="color" id="vp-bg-custom" value="#cdb899"></div>
+  </div>
+</div>
+
+<!-- Hidden original buttons that JS still references (kept in DOM but hidden) -->
+<div style="display:none">
+  <button id="bpan"></button>
+  <button id="borbit"></button>
+  <button id="bbg"></button>
+  <button id="bstylus"></button>
+  <button id="bsave"></button>
+  <button id="bload"></button>
+  <button id="bexp"></button>
+  <button id="bpng"></button>
+  <button id="bscale"></button>
 </div>
 
 <!-- Hide UI button — always top-right, always visible -->
@@ -1098,6 +1121,9 @@ body.ui-hidden #sc-fab{top:auto;right:auto;left:10px;bottom:94px}
 
 <!-- Export menu -->
 <div id="expmenu">
+  <button class="emb" id="em-save">Save</button>
+  <button class="emb" id="em-load">Load</button>
+  <div class="emsep"></div>
   <button class="emb" id="exgltf">glTF (.glb)</button>
   <button class="emb" id="exobj">OBJ (.obj)</button>
   <button class="emb" id="exusd">USD (.usda)</button>
@@ -1105,7 +1131,10 @@ body.ui-hidden #sc-fab{top:auto;right:auto;left:10px;bottom:94px}
   <div class="emsep"></div>
   <button class="emb" id="exjson">Scene JSON</button>
   <div class="emsep"></div>
+  <button class="emb" id="em-png">Screenshot (PNG)</button>
   <button class="emb" id="exrecord">Record Views (.webm)</button>
+  <div class="emsep"></div>
+  <button class="emb" id="em-scale" style="opacity:0.45">Scale: OFF</button>
 </div>
 <input type="file" id="filein" accept=".json" style="display:none">
 
@@ -3566,7 +3595,7 @@ renderer.domElement.addEventListener('wheel',e=>{
   document.addEventListener('pointermove',function(e){
     if(e.pointerType!=='pen')return;
     var el=document.elementFromPoint(e.clientX,e.clientY);
-    var btn=el?el.closest('.btn,.cyc-btn,.emb,.nsm-btn,.cw,.bprev-btn,.bprev-more,.cyc-pop-item,.bgpop-swatch,.tb-lrow,.fc-hdr-btn'):null;
+    var btn=el?el.closest('.btn,.cyc-btn,.emb,.nsm-btn,.cw,.bprev-btn,.bprev-more,.cyc-pop-item,.bgpop-swatch,.tb-lrow,.fc-hdr-btn,.vp-row'):null;
     if(btn===lastHovered)return;
     if(lastHovered)lastHovered.classList.remove('hover');
     lastHovered=btn;
@@ -3600,6 +3629,8 @@ function setMode(m){
   document.body.classList.toggle('erasing',m==='erase');
   document.body.classList.toggle('selecting',m==='select');
   renderer.domElement.style.cursor=m==='draw'?'crosshair':m==='pan'||m==='orbit'?'grab':'default';
+  // Sync look button
+  if(window._syncLookBtn)window._syncLookBtn();
 }
 
 
@@ -6937,8 +6968,6 @@ document.getElementById('sselect').addEventListener('click',()=>setMode('select'
 document.getElementById('pb-draw').addEventListener('click',()=>setMode('draw'));
 document.getElementById('pb-erase').addEventListener('click',()=>setMode('erase'));
 document.getElementById('pb-select').addEventListener('click',()=>setMode('select'));
-document.getElementById('bpan').addEventListener('click',()=>setMode('pan'));
-document.getElementById('borbit').addEventListener('click',()=>setMode('orbit'));
 
 document.getElementById('sflat').addEventListener('click',function(){flatBrush=!flatBrush;this.classList.toggle('on',flatBrush);var pb=document.getElementById('pb-flat');if(pb)pb.classList.toggle('on',flatBrush);var scx=document.getElementById('scx-flat');if(scx)scx.classList.toggle('on',flatBrush);toast(flatBrush?'Marker brush':'Round brush');});
 document.getElementById('pb-flat').addEventListener('click',()=>document.getElementById('sflat').click());
@@ -6980,42 +7009,14 @@ document.getElementById('pb-vel').addEventListener('click',()=>document.getEleme
   _mo.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 
-// Export scale cycling
-document.getElementById('bscale').addEventListener('click',function(){
-  exportScaleIdx=(exportScaleIdx+1)%SCALE_STEPS.length;
-  const lbl=SCALE_LABELS[exportScaleIdx];
-  const isOff=SCALE_STEPS[exportScaleIdx]===null;
-  this.textContent=lbl;
-  this.style.opacity=isOff?'0.45':'';
-  this.classList.toggle('on',!isOff);
-  buildScaleBar();updateScaleBarLabel();
-  toast(isOff?'Export scale off':'Export '+lbl);
-});
-
 document.getElementById('bundo').addEventListener('click',undo);
 document.getElementById('bredo').addEventListener('click',redo);
 document.getElementById('pb-undo').addEventListener('click',undo);
 document.getElementById('pb-redo').addEventListener('click',redo);
 document.getElementById('bclear').addEventListener('click',()=>{if(confirm('Clear all strokes?'))clearAll();});
 
-// Visibility — sidebar + narrow both wired
-document.getElementById('bsurf').addEventListener('click',function(){surfGroup.visible=!surfGroup.visible;this.classList.toggle('on',surfGroup.visible);var pb=document.getElementById('pb-surf');if(pb)pb.classList.toggle('on',surfGroup.visible);markDirty();});
-
-document.getElementById('bgrid').addEventListener('click',function(){gridH.visible=!gridH.visible;this.classList.toggle('on',gridH.visible);var pb=document.getElementById('pb-grid');if(pb)pb.classList.toggle('on',gridH.visible);markDirty();});
-
-function toggleAxis(on){axisLinesOn=on;axisGroup.visible=on;var b=document.getElementById('baxis');if(b)b.classList.toggle('on',on);var pb=document.getElementById('pb-axis');if(pb)pb.classList.toggle('on',on);markDirty();}
-document.getElementById('baxis').addEventListener('click',()=>toggleAxis(!axisLinesOn));
-
-document.getElementById('bdepth').addEventListener('click',function(){
-  depthCuesOn=!depthCuesOn;
-  this.classList.toggle('on',depthCuesOn);
-  var pb=document.getElementById('pb-depth');if(pb)pb.classList.toggle('on',depthCuesOn);
-  if(_frostedMesh)_frostedMesh.visible=depthCuesOn;
-  if(_frostedGridMesh)_frostedGridMesh.visible=depthCuesOn&&_surfGridMode>0;
-  if(window._syncFpsDepth)window._syncFpsDepth();
-  markDirty();
-  toast(depthCuesOn?'Depth on':'Depth off');
-});
+// Visibility helper functions (called from view-pop and narrow-bar)
+function toggleAxis(on){axisLinesOn=on;axisGroup.visible=on;var b=document.getElementById('baxis');if(b)b.classList.toggle('on',on);var pb=document.getElementById('pb-axis');if(pb)pb.classList.toggle('on',on);if(window._syncViewToggle)window._syncViewToggle();markDirty();}
 
 // Depth plane opacity — affects tint mesh only, not grid dots/lines
 function cycleDepthOp(){
@@ -7024,11 +7025,10 @@ function cycleDepthOp(){
   var lbl=_depthOpLabels[_depthOpIdx];
   if(_frostedMat){_frostedMat.opacity=op;_frostedMat.needsUpdate=true;}
   if(_fpsFrosted){_fpsFrosted.material.opacity=op;_fpsFrosted.material.needsUpdate=true;}
-  var tb=document.getElementById('bdepth-op');if(tb)tb.textContent=lbl;
+  var tb=document.getElementById('bdepth-op');if(tb)tb.textContent='Depth: '+lbl;
   var pb=document.getElementById('pb-depthop');if(pb)pb.textContent=lbl;
   markDirty();toast('Plane '+lbl);
 }
-document.getElementById('bdepth-op').addEventListener('click',cycleDepthOp);
 document.getElementById('pb-depthop').addEventListener('click',cycleDepthOp);
 
 // Surface grid cycle — DOT → GRD → OFF (outline always stays)
@@ -7036,12 +7036,11 @@ function cycleSurfGrid(){
   _surfGridMode=(_surfGridMode+1)%3;
   var lbl=_surfGridLabels[_surfGridMode];
   var isOn=_surfGridMode>0;
-  var tb=document.getElementById('bsurfgrid');if(tb){tb.textContent=lbl;tb.classList.toggle('on',isOn);}
+  var tb=document.getElementById('bsurfgrid');if(tb){tb.textContent='Grid: '+lbl;tb.classList.toggle('on',isOn);}
   var pb=document.getElementById('pb-surfgrid');if(pb){pb.textContent=lbl;pb.classList.toggle('on',isOn);}
   applyFrostedGridTex();
   toast('Grid '+lbl);
 }
-document.getElementById('bsurfgrid').addEventListener('click',cycleSurfGrid);
 document.getElementById('pb-surfgrid').addEventListener('click',cycleSurfGrid);
 
 function togglePersp(){
@@ -7091,13 +7090,8 @@ function setOrtho(on){
     if(b){b.textContent=txt;b.classList.toggle('on',on);}
   });
 }
-document.getElementById('bpersp').addEventListener('click',togglePersp);
 document.getElementById('nav-persp').addEventListener('click',togglePersp);
 document.getElementById('pb-nav-persp').addEventListener('click',togglePersp);
-
-// Gesture swap
-document.getElementById('bgestswap').addEventListener('click',function(){twoFingerMode=twoFingerMode==='orbit'?'pan':'orbit';updateGestLabel();toast('2-finger = '+(twoFingerMode==='orbit'?'orbit':'pan'));});
-document.getElementById('bstylus').addEventListener('click',function(){stylusOnly=!stylusOnly;updateStylusLabel();toast(stylusOnly?'Stylus mode: pen draws, finger navigates':'Stylus mode off');});
 
 // Narrow-bar delegates — scene toggles
 document.getElementById('pb-depth').addEventListener('click',function(){document.getElementById('bdepth').click();});
@@ -7106,7 +7100,7 @@ document.getElementById('pb-grid').addEventListener('click',function(){document.
 document.getElementById('pb-axis').addEventListener('click',function(){document.getElementById('baxis').click();});
 // Narrow-bar delegates — input modes
 document.getElementById('pb-gestswap').addEventListener('click',function(){document.getElementById('bgestswap').click();});
-document.getElementById('pb-stylus').addEventListener('click',function(){document.getElementById('bstylus').click();});
+document.getElementById('pb-stylus').addEventListener('click',function(){stylusOnly=!stylusOnly;updateStylusLabel();toast(stylusOnly?'Stylus mode: pen draws, finger navigates':'Stylus mode off');});
 // Narrow-bar delegates — actions
 document.getElementById('pb-clear').addEventListener('click',function(){document.getElementById('bclear').click();});
 document.getElementById('pb-bg').addEventListener('click',function(e){
@@ -7224,12 +7218,18 @@ function setBgColor(hex,key){
   if(_frostedMat)_frostedMat.color.set(hex);
   document.documentElement.style.setProperty('--bg',hex);
   markDirty();
-  // Sync swatch active state
+  // Sync swatch active state — both bgpop and view-pop
   _curBgKey=key||'custom';
   document.querySelectorAll('.bgpop-swatch').forEach(function(sw){sw.classList.remove('on');});
   var pick=document.getElementById('bgpop-pick');if(pick)pick.classList.remove('on');
-  if(key){var sw=document.getElementById('bgpop-'+key);if(sw)sw.classList.add('on');}
-  else{if(pick)pick.classList.add('on');}
+  var vpPick=document.getElementById('vp-bgpick');if(vpPick)vpPick.classList.remove('on');
+  if(key){
+    var sw=document.getElementById('bgpop-'+key);if(sw)sw.classList.add('on');
+    var vp=document.getElementById('vp-bg-'+key);if(vp)vp.classList.add('on');
+  } else {
+    if(pick)pick.classList.add('on');
+    if(vpPick)vpPick.classList.add('on');
+  }
 }
 (function(){
   var btn=document.getElementById('bbg');
@@ -7259,6 +7259,219 @@ function setBgColor(hex,key){
   });
 })();
 
+// ── View toggle (tap=all on/off, long-press=popover) ─────────────
+(function(){
+  var btn=document.getElementById('bview-toggle');
+  var arrow=document.getElementById('bview-arrow');
+  var pop=document.getElementById('view-pop');
+  if(!btn||!pop)return;
+  // Track individual saved states for restore
+  var _viewSaved={surf:true,grid:true,axis:true,depth:true};
+  var _viewAllOn=true;
+
+  function syncToggleIcon(){
+    var anyOn=surfGroup.visible||gridH.visible||axisLinesOn||depthCuesOn;
+    btn.classList.toggle('on',anyOn);
+  }
+
+  function openPop(){
+    // Sync .on states with current visibility
+    document.getElementById('bsurf').classList.toggle('on',surfGroup.visible);
+    document.getElementById('bgrid').classList.toggle('on',gridH.visible);
+    document.getElementById('baxis').classList.toggle('on',axisLinesOn);
+    document.getElementById('bdepth').classList.toggle('on',depthCuesOn);
+    pop.classList.add('open');
+    var br=(arrow||btn).getBoundingClientRect();
+    pop.style.top=(br.bottom+4)+'px';
+    pop.style.left=Math.max(4,Math.min(br.left,window.innerWidth-pop.offsetWidth-4))+'px';
+    if(arrow)arrow.classList.add('on');
+  }
+  function closePop(){pop.classList.remove('open');if(arrow)arrow.classList.remove('on');}
+
+  // Tap eye: toggle all 4 on/off
+  function tapToggle(){
+    var anyOn=surfGroup.visible||gridH.visible||axisLinesOn||depthCuesOn;
+    if(anyOn){
+      // Save current states, then turn all off
+      _viewSaved.surf=surfGroup.visible;
+      _viewSaved.grid=gridH.visible;
+      _viewSaved.axis=axisLinesOn;
+      _viewSaved.depth=depthCuesOn;
+      _viewAllOn=false;
+      surfGroup.visible=false;gridH.visible=false;
+      axisLinesOn=false;axisGroup.visible=false;
+      depthCuesOn=false;
+      if(_frostedMesh)_frostedMesh.visible=false;
+      if(_frostedGridMesh)_frostedGridMesh.visible=false;
+      if(window._syncFpsDepth)window._syncFpsDepth();
+    } else {
+      // Restore saved states
+      surfGroup.visible=_viewSaved.surf;
+      gridH.visible=_viewSaved.grid;
+      axisLinesOn=_viewSaved.axis;axisGroup.visible=_viewSaved.axis;
+      depthCuesOn=_viewSaved.depth;
+      if(_frostedMesh)_frostedMesh.visible=depthCuesOn;
+      if(_frostedGridMesh)_frostedGridMesh.visible=depthCuesOn&&_surfGridMode>0;
+      if(window._syncFpsDepth)window._syncFpsDepth();
+      _viewAllOn=true;
+    }
+    // Sync all buttons
+    document.getElementById('bsurf').classList.toggle('on',surfGroup.visible);
+    document.getElementById('bgrid').classList.toggle('on',gridH.visible);
+    document.getElementById('baxis').classList.toggle('on',axisLinesOn);
+    document.getElementById('bdepth').classList.toggle('on',depthCuesOn);
+    var pb;
+    pb=document.getElementById('pb-surf');if(pb)pb.classList.toggle('on',surfGroup.visible);
+    pb=document.getElementById('pb-grid');if(pb)pb.classList.toggle('on',gridH.visible);
+    pb=document.getElementById('pb-axis');if(pb)pb.classList.toggle('on',axisLinesOn);
+    pb=document.getElementById('pb-depth');if(pb)pb.classList.toggle('on',depthCuesOn);
+    syncToggleIcon();
+    markDirty();
+    toast(anyOn?'View off':'View on');
+  }
+
+  // Eye icon tap = toggle all
+  btn.addEventListener('click',function(e){e.stopPropagation();tapToggle();});
+
+  // Arrow button = open/close popover
+  if(arrow){
+    arrow.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(pop.classList.contains('open')){closePop();}
+      else{openPop();}
+    });
+  }
+
+  // Close popover when tapping canvas (starting a draw/orbit action)
+  renderer.domElement.addEventListener('pointerdown',function(){
+    if(pop.classList.contains('open'))closePop();
+  });
+
+  // Individual toggle clicks inside view-pop
+  document.getElementById('bsurf').addEventListener('click',function(e){
+    e.stopPropagation();
+    surfGroup.visible=!surfGroup.visible;
+    this.classList.toggle('on',surfGroup.visible);
+    var pb=document.getElementById('pb-surf');if(pb)pb.classList.toggle('on',surfGroup.visible);
+    syncToggleIcon();markDirty();
+  });
+  document.getElementById('bgrid').addEventListener('click',function(e){
+    e.stopPropagation();
+    gridH.visible=!gridH.visible;
+    this.classList.toggle('on',gridH.visible);
+    var pb=document.getElementById('pb-grid');if(pb)pb.classList.toggle('on',gridH.visible);
+    syncToggleIcon();markDirty();
+  });
+  document.getElementById('baxis').addEventListener('click',function(e){
+    e.stopPropagation();
+    toggleAxis(!axisLinesOn);
+    syncToggleIcon();
+  });
+  document.getElementById('bdepth').addEventListener('click',function(e){
+    e.stopPropagation();
+    depthCuesOn=!depthCuesOn;
+    this.classList.toggle('on',depthCuesOn);
+    var pb=document.getElementById('pb-depth');if(pb)pb.classList.toggle('on',depthCuesOn);
+    if(_frostedMesh)_frostedMesh.visible=depthCuesOn;
+    if(_frostedGridMesh)_frostedGridMesh.visible=depthCuesOn&&_surfGridMode>0;
+    if(window._syncFpsDepth)window._syncFpsDepth();
+    syncToggleIcon();markDirty();
+    toast(depthCuesOn?'Depth on':'Depth off');
+  });
+  document.getElementById('bdepth-op').addEventListener('click',function(e){
+    e.stopPropagation();cycleDepthOp();
+  });
+  document.getElementById('bsurfgrid').addEventListener('click',function(e){
+    e.stopPropagation();cycleSurfGrid();
+  });
+  document.getElementById('bpersp').addEventListener('click',function(e){
+    e.stopPropagation();togglePersp();
+    this.textContent=useOrtho?'ORTHO':'PERSP';
+  });
+  document.getElementById('bgestswap').addEventListener('click',function(e){
+    e.stopPropagation();
+    twoFingerMode=twoFingerMode==='orbit'?'pan':'orbit';
+    updateGestLabel();
+    this.textContent=twoFingerMode==='orbit'?'2F=ORB':'2F=PAN';
+    toast('2-finger = '+(twoFingerMode==='orbit'?'orbit':'pan'));
+  });
+  // View-pop BG swatches
+  document.getElementById('vp-bg-beige').addEventListener('click',function(e){e.stopPropagation();setBgColor('#cdb899','beige');});
+  document.getElementById('vp-bg-white').addEventListener('click',function(e){e.stopPropagation();setBgColor('#f5f0e8','white');});
+  document.getElementById('vp-bg-black').addEventListener('click',function(e){e.stopPropagation();setBgColor('#1a1a2e','black');});
+  var vpCustom=document.getElementById('vp-bg-custom');
+  if(vpCustom)vpCustom.addEventListener('input',function(e){e.stopPropagation();setBgColor(this.value,null);});
+
+  // Close popover on outside click (but not on view-pop itself or toggle buttons)
+  document.addEventListener('click',function(e){
+    if(pop.classList.contains('open')&&!pop.contains(e.target)&&e.target!==btn&&e.target!==arrow&&!btn.contains(e.target)&&!(arrow&&arrow.contains(e.target))){
+      closePop();
+    }
+  });
+  // Also close view-pop in newScene
+  window._closeViewPop=closePop;
+  window._syncViewToggle=syncToggleIcon;
+})();
+
+// ── Look around button ───────────────────────────────────────────
+(function(){
+  var btn=document.getElementById('blook');
+  if(!btn)return;
+  btn.addEventListener('click',function(){
+    if(mode==='orbit'){
+      // Return to previous draw mode
+      setMode(prevDrawMode||'draw');
+      btn.classList.remove('on');
+    } else {
+      // Enter look-around mode (orbit)
+      setMode('orbit');
+      btn.classList.add('on');
+    }
+  });
+  // Keep look button in sync when mode changes from other sources (keyboard, etc.)
+  window._syncLookBtn=function(){
+    if(btn)btn.classList.toggle('on',mode==='orbit');
+  };
+})();
+
+// ── File menu button ─────────────────────────────────────────────
+(function(){
+  var btn=document.getElementById('bfile');
+  if(!btn)return;
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var menu=document.getElementById('expmenu');
+    var open=menu.classList.toggle('vis');
+    if(open){
+      var br=btn.getBoundingClientRect();
+      var mw=160;
+      var left=Math.max(4,Math.min(br.left,window.innerWidth-mw-4));
+      var top=br.bottom+4;
+      if(top+300>window.innerHeight)top=br.top-4;
+      menu.style.top=top+'px';
+      menu.style.right='auto';
+      menu.style.left=left+'px';
+    }
+  });
+  // Wire new file menu items
+  document.getElementById('em-save').addEventListener('click',function(){document.getElementById('expmenu').classList.remove('vis');saveFile();});
+  document.getElementById('em-load').addEventListener('click',function(){document.getElementById('expmenu').classList.remove('vis');loadFile();});
+  document.getElementById('em-png').addEventListener('click',function(){document.getElementById('expmenu').classList.remove('vis');expPNG();});
+  document.getElementById('em-scale').addEventListener('click',function(e){
+    e.stopPropagation();
+    exportScaleIdx=(exportScaleIdx+1)%SCALE_STEPS.length;
+    var lbl=SCALE_LABELS[exportScaleIdx];
+    var isOff=SCALE_STEPS[exportScaleIdx]===null;
+    this.textContent='Scale: '+lbl;
+    this.style.opacity=isOff?'0.45':'';
+    // Sync hidden bscale element
+    var bs=document.getElementById('bscale');
+    if(bs){bs.textContent=lbl;bs.style.opacity=isOff?'0.45':'';bs.classList.toggle('on',!isOff);}
+    buildScaleBar();updateScaleBarLabel();
+    toast(isOff?'Export scale off':'Export '+lbl);
+  });
+})();
+
 // ── New Scene ─────────────────────────────────────────────────────
 function newScene(){
   // ── Cancel recording if active ──
@@ -7281,7 +7494,7 @@ function newScene(){
   var _pbv=document.getElementById('pb-vwbtn');if(_pbv)_pbv.classList.remove('on');
   var _hvb=document.getElementById('bviews-hidden');if(_hvb)_hvb.classList.remove('on');
   // ── Close any open popovers / menus ──
-  document.querySelectorAll('#bgpop,#sz-pop,#op-pop,#layers-pop').forEach(function(p){p.classList.remove('open');});
+  document.querySelectorAll('#bgpop,#sz-pop,#op-pop,#layers-pop,#view-pop').forEach(function(p){p.classList.remove('open');});
   document.querySelectorAll('.cyc-pop').forEach(function(p){p.classList.remove('open');});
   var _exm=document.getElementById('expmenu');if(_exm)_exm.classList.remove('vis');
   document.getElementById('bbg').classList.remove('on');
@@ -7303,9 +7516,11 @@ function newScene(){
   depthCuesOn=true;
   document.querySelectorAll('#bdepth,#pb-depth').forEach(function(b){if(b)b.classList.add('on');});
   _depthOpIdx=0;
-  document.querySelectorAll('#bdepth-op,#pb-depthop').forEach(function(b){if(b)b.textContent=_depthOpLabels[0];});
+  var _bdop=document.getElementById('bdepth-op');if(_bdop)_bdop.textContent='Depth: '+_depthOpLabels[0];
+  var _pbdop=document.getElementById('pb-depthop');if(_pbdop)_pbdop.textContent=_depthOpLabels[0];
   _surfGridMode=2;
-  document.querySelectorAll('#bsurfgrid,#pb-surfgrid').forEach(function(b){if(b)b.textContent=_surfGridLabels[2];});
+  var _bsg=document.getElementById('bsurfgrid');if(_bsg){_bsg.textContent='Grid: '+_surfGridLabels[2];}
+  var _pbsg=document.getElementById('pb-surfgrid');if(_pbsg)_pbsg.textContent=_surfGridLabels[2];
   // ── Reset surface to default plane XZ ──
   surfType='plane';curPlane='xz';
   surfPos.set(0,0,0);surfEuler.set(0,0,0);surfScale=1;surfScaleAxes.set(1,1,1);
@@ -7364,6 +7579,11 @@ function newScene(){
   showMergeLayerRow(false);
   // ── Clear IDB autosave ──
   try{idbSave(JSON.stringify(sceneData()));}catch(e){}
+  // ── Sync view toggle + popover labels ──
+  if(window._syncViewToggle)window._syncViewToggle();
+  var _vpersp=document.getElementById('bpersp');if(_vpersp)_vpersp.textContent='PERSP';
+  var _vgest=document.getElementById('bgestswap');if(_vgest)_vgest.textContent='2F=ORB';
+  var _emsc=document.getElementById('em-scale');if(_emsc){_emsc.textContent='Scale: OFF';_emsc.style.opacity='0.45';}
   toast('New scene');
 }
 (function(){
@@ -7431,25 +7651,6 @@ function newScene(){
     if(e.key==='Escape'){cancel();}
   });
 })();
-document.getElementById('bsave').addEventListener('click',saveFile);
-document.getElementById('bload').addEventListener('click',loadFile);
-document.getElementById('bexp').addEventListener('click',function(e){
-  e.stopPropagation();
-  var menu=document.getElementById('expmenu');
-  var open=menu.classList.toggle('vis');
-  if(open){
-    var br=this.getBoundingClientRect();
-    var mw=140;
-    var left=Math.max(4,Math.min(br.left,window.innerWidth-mw-4));
-    var top=br.bottom+4;
-    // If too close to bottom, flip above
-    if(top+200>window.innerHeight)top=br.top-4;
-    menu.style.top=top+'px';
-    menu.style.right='auto';
-    menu.style.left=left+'px';
-  }
-});
-document.getElementById('bpng').addEventListener('click',expPNG);
 document.addEventListener('click',()=>document.getElementById('expmenu').classList.remove('vis'));
 document.getElementById('expmenu').addEventListener('click',e=>e.stopPropagation());
 document.getElementById('exgltf').addEventListener('click',()=>{document.getElementById('expmenu').classList.remove('vis');promptExportName('sketch3d','.glb',expGLTF);});
